@@ -11,12 +11,9 @@ the size and pizza type
 
 import pandas as pd
 import numpy as np
-import re
-import xml.etree.ElementTree as ET
 from fpdf import FPDF
 import matplotlib.pyplot as plt
 import seaborn as sns
-from fpdf import FPDF
 import warnings
 
 

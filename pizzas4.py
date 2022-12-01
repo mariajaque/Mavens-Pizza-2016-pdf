@@ -21,38 +21,33 @@ import sys
 
 warnings.filterwarnings("ignore")
 
-def handler_signal(signal,frame):
 
-    # Salida controlada del programa en caso de pulsar 
+def handler_signal(signal, frame):
+
+    # Salida controlada del programa en caso de pulsar
     # control C
 
     print("\n\n [!] out .......\ n")
 
     sys.exit(1)
 
-signal.signal(signal.SIGINT,handler_signal)
+
+signal.signal(signal.SIGINT, handler_signal)
 
 
 class PDF(FPDF):
-    def header(self):
+    def portada(self):
 
-        # Establecemos que en el cabecero siempre esté el logo
-        # de mavens pizza
+        # Creamos la portada en la que venga el título del reporte, el año y
+        # una fotografía del logo del equipo
+        # Alineamos ambos textos en el centro
 
-        self.image('logo_mavens.jpg', 15, 15, 25)
-
-        # Establecemos que en el cabecero se escriba con la letra de
-        # tipografía "helvetica" en negrita, subrayada y de tamaño 30
-
-        self.set_font('helvetica', 'bu', 20)
-
-        # Creamos la celda en la que va a ir el título
-        # Añadimos alighn='C' para que esté en el centro y añadimos ln = True
-        # Para que salte a la siguiente línea si después añadimos texto
-
-        self.cell(0, 20, 'Mavens Pizza reporte ejecutivo 2016', ln=True, align='C')
-
-        # Añadimos una línea vacía para que quede más espaciado el título
+        self.set_font('times', 'b', 40)
+        self.set_y(50)
+        self.cell(0, 40, 'Mavens Pizza Report', ln=True, align='C')
+        self.set_font('times', '', 25)
+        self.cell(0, 25, '2016', ln=True, align='C')
+        self.image('logo_mavens.jpg', x=25, y=120, w=150)
 
     def footer(self):
 
@@ -61,7 +56,7 @@ class PDF(FPDF):
         # de página. En nuestro caso queremos que comience a 10 mm del final de la página
 
         self.set_y(-20)
-        self.set_font('helvetica', '', 8)
+        self.set_font('times', '', 8)
 
         # Añadimos el número de línea
 
@@ -280,16 +275,15 @@ def load(res, datos):
     # página
     pdf.set_auto_page_break(auto=True, margin=100)
 
-    # Añadimos una página
+    # Añadimos una página y la portada
+    pdf.add_page()
+    pdf.portada()
     pdf.add_page()
 
     # Vamos a querer que el tipo de fuente sea 'Helvetica'
     # El tamaño de la letra será de 20
 
-    pdf.set_font('helvetica', 'U', 12)
-
-    # Añadimos el texto con la referencia a la autora del reporte
-    pdf.cell(0,10, 'Por: María Jaque', ln=True, align='C')
+    pdf.set_font('times', 'b', 20)
 
     # Añadimos las imágenes con las gráficas
     nombres = ['evolucion_temporal_ingredientes.jpg', 'evolucion_temporal_pizzas.jpg', 'ingredientes_a_comprar.jpg', 'pizzas_compradas_anual.jpg', 'top_5_pizzas.jpg', 'peores_5_pizzas.jpg']
@@ -310,7 +304,6 @@ def load(res, datos):
 
     pdf.cell(0, 20, 'Evolución temporal de las pizzas pedidas:')
     pdf.image('evolucion_temporal_pizzas.jpg', 60, 50, 90)
-
 
     pdf.output('reporte_ejecutivo.pdf')
 
@@ -355,6 +348,7 @@ def informe_de_datos(fechas, pedidos, detalles, ingredientes):
 
     return informe
 
+
 def reporte(datos, res):
 
     # Vamos a crear los siguientes gráficos:
@@ -364,6 +358,8 @@ def reporte(datos, res):
     # - BarPlot con los ingredientes que se deben comprar
     # - Gráfica con las pizzas compradas en todo el año
     # - Gráfica con las 5 top pizzas
+
+    sns.set_style('darkgrid')
 
     ingredientes = res['Ingredientes:'].unique().tolist()
     pizzas = datos['pizza_id'].unique().tolist()
@@ -395,8 +391,8 @@ def reporte(datos, res):
     fig, axis = plt.subplots(len(tipos), 1, figsize=(35,90))
     i = 0
     for t in tipos:
-        ax=c[c['pizza_id'] == t].plot(x='semana', y = 'cantidad', ax=axis[i], label=t, color='b')
-        i+=1
+        ax = c[c['pizza_id'] == t].plot(x='semana', y='cantidad', ax=axis[i], label=t, color='b')
+        i += 1
     # plt.show()
     plt.savefig('evolucion_temporal_pizzas.jpg', dpi=300, bbox_inches='tight')
 
@@ -405,8 +401,8 @@ def reporte(datos, res):
     # Sacamos el orden en el que queremos que vayan las barras
     orden = res.groupby('Ingredientes:')['Unidades a comprar:'].sum().sort_values(ascending=False).index.values
     plt.figure(figsize=(15,10))
-    plt.title("Ingredientes a comprar")
-    ax = sns.barplot(x = 'Ingredientes:', y='Unidades a comprar:', data=res,palette='Blues_d', order=orden)
+    plt.title("Ingredientes a comprar", fontsize=50, fontweight='bold')
+    ax = sns.barplot(x='Ingredientes:', y='Unidades a comprar:', data=res,palette='Blues_d', order=orden)
     plt.xticks(rotation=90)
     #plt.show()
     plt.savefig('ingredientes_a_comprar.jpg', dpi=300, bbox_inches='tight')
@@ -420,8 +416,8 @@ def reporte(datos, res):
     # Gráfica con las pizzas compradas en total
     # Sacamos el orden en el que queremos las columnas
     orden = datos.groupby('pizza_id')['quantity'].sum().sort_values(ascending=False).index.values
-    plt.figure(figsize=(15,10))
-    plt.title("Pizzas compradas en total")
+    plt.figure(figsize=(15, 10))
+    plt.title("Pizzas compradas en total", fontsize=50, fontweight='bold')
     ax = sns.barplot(x='pizza_id', y='quantity', data=datos, palette='Blues_d', estimator=np.sum, order=orden)
     plt.xticks(rotation=90)
     #plt.show()
@@ -468,7 +464,7 @@ def reporte(datos, res):
 
     # Gráfica de las 5 pizzas más pedidas en todo el año
     plt.figure(figsize=(15,10))
-    plt.title("Top 5 pizzas")
+    plt.title("Top 5 pizzas", fontsize=50, fontweight='bold')
     ax = sns.barplot(x=id_max, y=cant_max, palette='Blues_d', estimator=np.sum)
     plt.xticks(rotation=90)
     # plt.show()
@@ -476,7 +472,7 @@ def reporte(datos, res):
 
     # Gráfica de las 5 pizzas menos pedidas en todo el año
     plt.figure(figsize=(15,10))
-    plt.title("5 peores pizzas")
+    plt.title("5 peores pizzas", fontsize=50, fontweight='bold')
     ax = sns.barplot(x=id_min, y=cant_min, palette='Blues_d', estimator=np.sum)
     plt.xticks(rotation=90)
     # plt.show()
